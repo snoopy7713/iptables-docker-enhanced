@@ -1,0 +1,150 @@
+# iptables-docker 防火墙规则配置文件 (YAML 格式)
+#
+# 格式说明:
+# - 支持行内注释 (使用 #)
+# - sources 列表中的每个 IP/CIDR 可以带注释
+# - description 字段为可选描述信息
+#
+
+# ============================================
+# 开放端口规则
+# ============================================
+allow-ports:
+  # SSH 访问配置
+  - port: 22
+    proto: tcp
+    sources:
+      - 192.168.25.0/24  # XXX子网
+      - 172.16.20.12     # 算力设备
+      - 10.0.1.50        # 跳板机
+    description: "SSH远程访问"
+  
+  # Web 管理界面
+  - port: 8081
+    proto: tcp
+    sources:
+      - 192.168.25.0/24  # 内网访问
+      - 192.168.1.100    # 管理员机器
+    description: "Web管理界面"
+
+  # HTTP/HTTPS 服务（根据需要取消注释）
+  # - port: 80
+  #   proto: tcp
+  #   sources:
+  #     - 0.0.0.0/0
+  #   description: "HTTP服务"
+  
+  # - port: 443
+  #   proto: tcp
+  #   sources:
+  #     - 0.0.0.0/0
+  #   description: "HTTPS服务"
+
+  # 数据库服务（仅内网访问）
+  # - port: 3306
+  #   proto: tcp
+  #   sources:
+  #     - 192.168.1.0/24
+  #     - 10.0.0.0/8
+  #   description: "MySQL数据库"
+  
+  # - port: 6379
+  #   proto: tcp
+  #   sources:
+  #     - 127.0.0.1
+  #     - 192.168.1.0/24
+  #   description: "Redis缓存"
+
+# ============================================
+# 允许源IP规则（允许所有端口）
+# ============================================
+allow-sources:
+  - ip: 192.168.1.100
+    description: "管理员机器 - 完全访问"
+  
+  - ip: 10.0.0.0/8
+    description: "内部网络 - 完全访问"
+  
+  # - ip: 172.16.0.0/12
+  #   description: "VPN网段"
+
+# ============================================
+# Docker容器端口白名单
+# ============================================
+# 说明：控制外部机器访问bridge模式容器的映射端口
+# 容器间通信不受影响
+# Host网络模式的容器请使用 allow-ports 配置
+docker-ports:
+  # Web容器
+  - port: 8081
+    proto: tcp
+    sources:
+      - 192.168.25.0/24  # 允许无线访客访问
+    description: "容器Web服务"
+  
+  # 数据库容器（仅本机访问）
+  # - port: 3306
+  #   proto: tcp
+  #   sources:
+  #     - 127.0.0.1
+  #   description: "MySQL容器(仅本机)"
+  
+  # 缓存容器（内网访问）
+  # - port: 6379
+  #   proto: tcp
+  #   sources:
+  #     - 192.168.1.0/24
+  #     - 10.0.0.0/8
+  #   description: "Redis容器"
+  
+  # MongoDB容器
+  # - port: 27017
+  #   proto: tcp
+  #   sources:
+  #     - 10.0.0.0/8
+  #   description: "MongoDB容器"
+
+# ============================================
+# 端口转发规则
+# ============================================
+forward-ports:
+  # 示例：将外部 8080 端口转发到容器的 80 端口
+  # - external: 8080
+  #   internal-ip: 172.17.0.2
+  #   internal-port: 80
+  #   proto: tcp
+  #   description: "转发到nginx容器"
+  
+  # - external: 3307
+  #   internal-ip: 172.17.0.3
+  #   internal-port: 3306
+  #   proto: tcp
+  #   description: "转发到MySQL容器"
+
+# ============================================
+# Docker Swarm 配置（如需要请取消注释）
+# ============================================
+# allow-ports:
+#   - port: 2377
+#     proto: tcp
+#     sources:
+#       - 192.168.1.0/24
+#     description: "Swarm管理端口"
+#   
+#   - port: 7946
+#     proto: tcp
+#     sources:
+#       - 192.168.1.0/24
+#     description: "Swarm节点通信(TCP)"
+#   
+#   - port: 7946
+#     proto: udp
+#     sources:
+#       - 192.168.1.0/24
+#     description: "Swarm节点通信(UDP)"
+#   
+#   - port: 4789
+#     proto: udp
+#     sources:
+#       - 192.168.1.0/24
+#     description: "Swarm overlay网络"
